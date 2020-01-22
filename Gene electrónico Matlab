@@ -1,0 +1,438 @@
+ clear
+ M=zeros(10,10); %matriz de tablero
+ %posicionamiento de los obstaculos
+ M(1,2)=1; M(1,8)=1; M(2,10)=1;  M(3,5)=1; M(3,10)=1; M(5,1)=1; M(5,6)=1; M(5,7)=1; M(6,6)=1; M(6,7)=1;
+ M(9,3)=1; M(9,4)=1; M(9,7)=1; M(10,1)=1; M(10,10)=1;
+ %registros de prueba
+ p1=[1 1 0]; %se elije de la forma p(1,:) 
+ p2=[1 0 1];
+ p3=[0 1 1];
+ p=[p1;p2;p3]; %metiendo los vectores de prueba en una matriz
+ %definición de umbrales (thetas) 3 1 2 sirvio bien
+ %t=randi([1,4],1,3);
+ %t1=t(1,1);
+ %t2=t(1,2);
+ %t3=t(1,3);
+ t1=2;
+ t2=2;
+ t3=2;
+ %banderas
+ f1=0;
+ f2=0;
+ f3=0;
+ 
+ %%%posicion inicial de robot 1 3 1
+ Pfrontal='n'; %n=norte=8 s=sur=2 e=este=6 o=oest=4 
+ xi=4;
+ yi=1;
+ M(yi,xi)=8;   %para reconocer dónde se ubica el robot y en que sentido
+ s=[0 0 0]; %registro de sensores inicial s1 diagonal izquierda, s2 medio, s3 diagonal derecha
+ 
+ %---------------------------------------------------------------------------------------------------SENTIDO NORTE
+ %%% LECTURA DE SENSORES
+ if(M(yi,xi)==8) 
+ if(yi==1)%borde superior (del tablero)
+ s=[1 1 1];%todos los sensores se activan
+ elseif(xi==1)%borde izquierdo (del tablero)
+ s(1,1)=1;%s1
+ if(M(yi-1,xi)==1)%s2
+ s(1,2)=1;
+ end
+ if(M(yi-1,xi+1)==1)%s3
+ s(1,3)=1;
+ end
+ elseif(xi==10)%borde derecho (del tablero)
+ s(1,3)=1;%s3
+ if(M(yi-1,xi)==1)%s2
+ s(1,2)=1;
+ end
+ if(M(yi-1,xi-1)==1)%s1
+ s(1,1)=1;
+ end
+ end
+ 
+  if(~(xi==1)&&~(xi==10)&&~(yi==1))
+ if(M(yi-1,xi-1)==1)%s1
+ s(1,1)=1;
+ end
+ if(M(yi-1,xi)==1)%s2
+ s(1,2)=1;
+ end
+ if(M(yi-1,xi+1)==1)%s3
+ s(1,3)=1;
+ end
+ end %%
+ 
+ DH=zeros(3,1); %vector de distancias hamming
+ %%%%%%%%%%%%%%% calculo de distancia hamming para activar cada bandera(f1,f2,f3)
+ for i=1 : 3
+ c=xor(s,p(i,:)); %xor entre registro de sensores y registros de prueba
+ DH(i,1)=sum(c(:) == 1); %cuenta el numero de unos que existe en el vector resultante de la xor (distancia hamming)
+ end
+ 
+ %activación de banderas
+ if(DH(1,1)>=t1)
+ f1=1;
+ else
+ f1=0;
+ end
+  if(DH(2,1)>=t2)
+ f2=1;
+ else
+ f2=0;
+  end
+  if(DH(3,1)>=t3)
+ f3=1;
+ else
+ f3=0;
+  end
+  
+  disp("Tablero pasado")
+  disp(M)
+  M(yi,xi)=0; %limpio la posicion inicial
+  
+ %comportamientos 
+ if((f1==0)&&(f2==0)&&(f3==0))
+ xi=xi-1; yi=yi+1; %atrás izquierda
+ end
+ if((f1==0)&&(f2==0)&&(f3==1))
+ if(M(yi-1,xi+1)==0)    
+ xi=xi+1; yi=yi-1; %adelante derecha
+ end
+ end
+ if((f1==0)&&(f2==1)&&(f3==0))
+ xi=xi+1; yi=yi+1; %atrás derecha
+ end
+ if((f1==0)&&(f2==1)&&(f3==1))
+ yi=yi+1; %atrás 
+ end
+ if((f1==1)&&(f2==0)&&(f3==0))
+ if(M(yi-1,xi)==0)
+ yi=yi-1; %adelante 
+ end
+ end
+ if((f1==1)&&(f2==1)&&(f3==1))
+ if(M(yi-1,xi-1)==0)    
+ xi=xi-1; yi=yi-1; %adelante izquierda
+ end
+ end
+ M(yi,xi)=8; 
+ %%cambio de sentidos
+ if((f1==1)&&(f2==0)&&(f3==1))
+ M(yi,xi)=6; 
+ Pfrontal='e'; %gira 90° horario
+ end
+ if((f1==1)&&(f2==1)&&(f3==0))
+ M(yi,xi)=4;     
+ Pfrontal='o'; %gira 90° antihorario
+ end
+ %end %Fin del if del sentido NORTE del robot
+ 
+  %---------------------------------------------------------------------------------------------------SENTIDO ESTE
+ %%% LECTURA DE SENSORES
+ elseif(M(yi,xi)==6) 
+ if(xi==10)%borde derecho (del tablero)
+ s=[1 1 1];%todos los sensores se activan
+ elseif(yi==10)%borde inferior (del tablero)
+ s(1,3)=1;%s3
+ if(M(yi-1,xi+1)==1)%s1
+ s(1,1)=1;
+ end
+ if(M(yi,xi+1)==1)%s2
+ s(1,2)=1;
+ end
+ elseif(yi==1)%borde superior (del tablero)
+ s(1,1)=1;%s1
+ if(M(yi,xi+1)==1)%s2
+ s(1,2)=1;
+ end
+ if(M(yi+1,xi+1)==1)%s3
+ s(1,3)=1;
+ end
+ end
+ 
+ if(~(yi==10)&&~(xi==10)&&~(yi==1))
+ if(M(yi-1,xi+1)==1)%s1
+ s(1,1)=1;
+ end
+ if(M(yi,xi+1)==1)%s2
+ s(1,2)=1;
+ end
+ if(M(yi+1,xi+1)==1)%s3
+ s(1,3)=1;
+ end
+ end %%
+ 
+ 
+ DH=zeros(3,1); %vector de distancias hamming
+ %%%%%%%%%%%%%%% calculo de distancia hamming para activar cada bandera(f1,f2,f3)
+ for i=1 : 3
+ c=xor(s,p(i,:)); %xor entre registro de sensores y registros de prueba
+ DH(i,1)=sum(c(:) == 1); %cuenta el numero de unos que existe en el vector resultante de la xor (distancia hamming)
+ end
+ 
+ %activación de banderas
+ if(DH(1,1)>=t1)
+ f1=1;
+ else
+ f1=0;
+ end
+  if(DH(2,1)>=t2)
+ f2=1;
+ else
+ f2=0;
+  end
+  if(DH(3,1)>=t3)
+ f3=1;
+ else
+ f3=0;
+  end
+  
+  disp("Tablero pasado")
+  disp(M)
+  M(yi,xi)=0; %limpio la posicion inicial
+  
+ %comportamientos 
+ if((f1==0)&&(f2==0)&&(f3==0))
+ xi=xi-1; yi=yi-1; %atrás izquierda
+ end
+ if((f1==0)&&(f2==0)&&(f3==1))
+ if(M(yi+1,xi+1)==0)    
+ xi=xi+1; yi=yi+1; %adelante derecha
+ end
+ end
+ if((f1==0)&&(f2==1)&&(f3==0))
+ xi=xi-1; yi=yi+1; %atrás derecha
+ end
+ if((f1==0)&&(f2==1)&&(f3==1))
+ xi=xi-1; %atrás 
+ end
+ if((f1==1)&&(f2==0)&&(f3==0))
+ if(M(yi,xi+1)==0)     
+ xi=xi+1; %adelante 
+ end
+ end
+ if((f1==1)&&(f2==1)&&(f3==1))
+ if(M(yi-1,xi+1)==0)     
+ xi=xi+1; yi=yi-1; %adelante izquierda
+ end
+ end
+ M(yi,xi)=6; 
+ %%cambio de sentidos
+ if((f1==1)&&(f2==0)&&(f3==1))
+ M(yi,xi)=2; 
+ Pfrontal='s'; %gira 90° horario
+ end
+ if((f1==1)&&(f2==1)&&(f3==0))
+ M(yi,xi)=8;     
+ Pfrontal='n'; %gira 90° antihorario
+ end
+ %end %Fin del if del sentido ESTE del robot
+ 
+ 
+  %---------------------------------------------------------------------------------------------------SENTIDO SUR
+ %%% LECTURA DE SENSORES
+ elseif(M(yi,xi)==2) 
+ if(yi==10)%borde inferior (del tablero)
+ s=[1 1 1];%todos los sensores se activan
+ elseif(xi==10)%borde derecho (del tablero)
+ s(1,1)=1;%s1
+ if(M(yi+1,xi)==1)%s2
+ s(1,2)=1;
+ end
+ if(M(yi+1,xi-1)==1)%s3
+ s(1,3)=1;
+ end
+ elseif(xi==1)%borde izquierdo (del tablero)
+ s(1,3)=1;%s3
+ if(M(yi+1,xi+1)==1)%s1
+ s(1,1)=1;
+ end
+ if(M(yi+1,xi)==1)%s2
+ s(1,2)=1;
+ end
+ end
+ 
+ if(~(yi==10)&&~(xi==10)&&~(xi==1))    
+ if(M(yi+1,xi+1)==1)%s1
+ s(1,1)=1;
+ end
+ if(M(yi+1,xi)==1)%s2
+ s(1,2)=1;
+ end
+ if(M(yi+1,xi-1)==1)%s3
+ s(1,3)=1;
+ end
+ end%%
+ 
+ 
+ DH=zeros(3,1); %vector de distancias hamming
+ %%%%%%%%%%%%%%% calculo de distancia hamming para activar cada bandera(f1,f2,f3)
+ for i=1 : 3
+ c=xor(s,p(i,:)); %xor entre registro de sensores y registros de prueba
+ DH(i,1)=sum(c(:) == 1); %cuenta el numero de unos que existe en el vector resultante de la xor (distancia hamming)
+ end
+ 
+ %activación de banderas
+ if(DH(1,1)>=t1)
+ f1=1;
+ else
+ f1=0;
+ end
+  if(DH(2,1)>=t2)
+ f2=1;
+ else
+ f2=0;
+  end
+  if(DH(3,1)>=t3)
+ f3=1;
+ else
+ f3=0;
+  end
+  
+  disp("Tablero pasado")
+  disp(M)
+  M(yi,xi)=0; %limpio la posicion inicial
+  
+ %comportamientos 
+ if((f1==0)&&(f2==0)&&(f3==0))
+ xi=xi+1; yi=yi-1; %atrás izquierda
+ end
+ if((f1==0)&&(f2==0)&&(f3==1))
+ if(M(yi+1,xi-1)==0)     
+ xi=xi-1; yi=yi+1; %adelante derecha
+ end
+ end
+ if((f1==0)&&(f2==1)&&(f3==0))
+ xi=xi-1; yi=yi-1; %atrás derecha
+ end
+ if((f1==0)&&(f2==1)&&(f3==1))
+ yi=yi-1; %atrás 
+ end
+ if((f1==1)&&(f2==0)&&(f3==0))
+ if(M(yi+1,xi)==0)     
+ yi=yi+1; %adelante 
+ end
+ end
+ if((f1==1)&&(f2==1)&&(f3==1))
+ if(M(yi+1,xi+1)==0)     
+ xi=xi+1; yi=yi+1; %adelante izquierda
+ end
+ end
+ M(yi,xi)=2; 
+ %%cambio de sentidos
+ if((f1==1)&&(f2==0)&&(f3==1))
+ M(yi,xi)=4; 
+ Pfrontal='o'; %gira 90° horario
+ end
+ if((f1==1)&&(f2==1)&&(f3==0))
+ M(yi,xi)=6;     
+ Pfrontal='e'; %gira 90° antihorario
+ end
+ %end %Fin del if del sentido SUR del robot
+ 
+ 
+ 
+  %---------------------------------------------------------------------------------------------------SENTIDO OESTE
+ %%% LECTURA DE SENSORES
+ elseif(M(yi,xi)==4) 
+ if(xi==1)%borde izquierdo (del tablero)
+ s=[1 1 1];%todos los sensores se activan    
+ elseif(yi==10)%borde inferior (del tablero)
+ s(1,1)=1;%s1
+ if(M(yi,xi-1)==1)%s2
+ s(1,2)=1;
+ end
+ if(M(yi-1,xi-1)==1)%s3
+ s(1,3)=1;
+ end
+ elseif(yi==1)%borde superior (del tablero)
+ s(1,3)=1;%s3
+ if(M(yi+1,xi-1)==1)%s1
+ s(1,1)=1;
+ end
+ if(M(yi,xi-1)==1)%s2
+ s(1,2)=1;
+ end
+ end
+ 
+ if(~(yi==10)&&~(xi==1)&&~(yi==1))
+ if(M(yi+1,xi-1)==1)%s1
+ s(1,1)=1;
+ end
+ if(M(yi,xi-1)==1)%s2
+ s(1,2)=1;
+ end
+ if(M(yi-1,xi-1)==1)%s3
+ s(1,3)=1;
+ end
+ end %%
+
+ 
+ DH=zeros(3,1); %vector de distancias hamming
+ %%%%%%%%%%%%%%% calculo de distancia hamming para activar cada bandera(f1,f2,f3)
+ for i=1 : 3
+ c=xor(s,p(i,:)); %xor entre registro de sensores y registros de prueba
+ DH(i,1)=sum(c(:) == 1); %cuenta el numero de unos que existe en el vector resultante de la xor (distancia hamming)
+ end
+ 
+ %activación de banderas
+ if(DH(1,1)>=t1)
+ f1=1;
+ else
+ f1=0;
+ end
+  if(DH(2,1)>=t2)
+ f2=1;
+ else
+ f2=0;
+  end
+  if(DH(3,1)>=t3)
+ f3=1;
+ else
+ f3=0;
+  end
+  
+  disp("Tablero pasado")
+  disp(M)
+  M(yi,xi)=0; %limpio la posicion inicial
+  
+ %comportamientos 
+ if((f1==0)&&(f2==0)&&(f3==0))
+ xi=xi+1; yi=yi+1; %atrás izquierda
+ end
+ if((f1==0)&&(f2==0)&&(f3==1))
+ if(M(yi-1,xi-1)==0)     
+ xi=xi-1; yi=yi-1; %adelante derecha
+ end
+ end
+ if((f1==0)&&(f2==1)&&(f3==0))
+ xi=xi+1; yi=yi-1; %atrás derecha
+ end
+ if((f1==0)&&(f2==1)&&(f3==1))
+ xi=xi+1; %atrás 
+ end
+ if((f1==1)&&(f2==0)&&(f3==0))
+ if(M(yi,xi-1)==0)     
+ xi=xi-1; %adelante 
+ end
+ end
+ if((f1==1)&&(f2==1)&&(f3==1))
+ if(M(yi+1,xi-1)==0)     
+ xi=xi-1; yi=yi+1; %adelante izquierda
+ end
+ end
+ M(yi,xi)=4; 
+ %%cambio de sentidos
+ if((f1==1)&&(f2==0)&&(f3==1))
+ M(yi,xi)=8; 
+ Pfrontal='n'; %gira 90° horario
+ end
+ if((f1==1)&&(f2==1)&&(f3==0))
+ M(yi,xi)=2;     
+ Pfrontal='s'; %gira 90° antihorario
+ end
+ end %Fin del if del sentido OESTE del robot
+  
+ disp("Tablero actual")
+ disp(M)
