@@ -1,0 +1,672 @@
+clear
+ %|00>=[1 0 0 0] |01>=[0 1 0 0] |10>=[0 0 1 0] |11>=[0 0 0 1]
+ k00= [1 ; 0 ; 0 ; 0]; %vector columna
+
+ M=zeros(12,12); %matriz de tablero
+ %posicionamiento de los obstaculos con borde de frontera
+ M(:,1)=1; M(:,12)=1; M(1,:)=1; M(12,:)=1; %borde
+ M(2,3)=1; M(2,9)=1; M(3,11)=1;  M(4,6)=1; M(4,11)=1; M(6,2)=1; M(5,4)=1; M(6,7)=1; M(7,7)=1; M(7,8)=1; M(7,11)=1;
+ M(8,10)=1; M(8,10)=1; M(9,4)=1; M(10,5)=1; M(10,8)=1; M(11,2)=1; M(11,6)=1; M(11,11)=1;
+
+ %%%posicion inicial de robot 
+ %n=norte=8 s=sur=2 e=este=6 o=oest=4 
+ xi=9;
+ yi=9;
+ M(yi,xi)=2;   %para reconocer dónde se ubica el robot y en que sentido
+ %posicion deseada
+ xf=10; yf=10;
+ 
+dw=rand(4,1);
+t1=rand(1); t2=rand(1); t3=rand(1); t4=rand(1); %thetas inicializados con valores aleatorios de 0 a 1
+Pmax=2; %N de pasos a realizar
+Npaso=0; %contador de pasos realizados
+h=0.01; %tasa de aprendizaje
+s=0; %pasos exitosos
+f=0; %pasos erroneos 
+J=rand(Pmax,1);
+
+ while Npaso<Pmax 
+ Npaso=Npaso+1;
+ pe=0;
+ Mp=M(yi,xi);xp=xi; yp=yi; %valores pasados 
+ s1=0; s2=0;
+ s3=(xi-1)/10; %sensores de posición
+ s4=(yi-1)/10;
+ 
+ %---------------------------------------------------------------------------------------------------SENTIDO NORTE
+ %%% LECTURA DE SENSORES
+ if(M(yi,xi)==8) 
+ 
+ if(M(yi-1,xi-1)==1)%s1
+ s1=1;
+ end
+ if(M(yi-1,xi+1)==1)%s2
+ s2=1;
+ end
+ 
+%parametros alfa
+a1= (pi/2)/(1+exp(-(s1-t1)));
+a2= (2*pi)/(1+exp(-(s2-t2)));
+a3= (pi/2)/(1+exp(-(s3-t3)));
+a4= (2*pi)/(1+exp(-(s4-t4)));
+
+%Rotacionales
+r1=[cos(a1) -exp(-1i*a2)*sin(a1); exp(1i*a2)*sin(a1) cos(a1)];
+r2=[cos(a3) -exp(-1i*a4)*sin(a3); exp(1i*a4)*sin(a3) cos(a3)];
+
+ki = kron(r1,r2); %producto tensorial r1xr2
+kf= ki*k00; %multiplicación con el estado incial |00>=[1 0 0 0]
+
+%probabilidades
+% p1=|00> p2=|01> p3=|10> p4=|11>
+p1=norm(kf(1))^2;
+p2=norm(kf(2))^2;
+p3=norm(kf(3))^2;
+p4=norm(kf(4))^2;
+  
+if((p1>p2)&&(p1>p3)&&(p1>p4))
+q=1;
+elseif((p2>p1)&&(p2>p3)&&(p2>p4))
+    q=2;
+    elseif((p3>p1)&&(p3>p2)&&(p3>p4))
+        q=3;
+        elseif((p4>p1)&&(p4>p2)&&(p4>p3))
+            q=4;
+end
+
+ 
+  M(yi,xi)=0; %limpio la posicion inicial
+  
+ %comportamientos 
+ if(q==4)
+ M(yi,xi)=6; %gira 90° horario
+ else
+     if(q==1)
+     if(M(yi-1,xi-1)==0)    
+     xi=xi-1; yi=yi-1; %adelante izquierda
+     else
+     pe=10; %penalización    
+     end
+elseif(q==2)
+     if(M(yi-1,xi+1)==0)    
+     xi=xi+1; yi=yi-1; %adelante derecha
+     else
+     pe=10; %penalización    
+     end    
+elseif(q==3)
+     if(M(yi-1,xi)==0)
+     yi=yi-1; %adelante 
+     else
+     pe=10; %penalización    
+     end   
+     end
+     M(yi,xi)=8;
+ end
+ 
+ %fin del if del sentido NORTE del robot
+ 
+  %---------------------------------------------------------------------------------------------------SENTIDO ESTE
+ %%% LECTURA DE SENSORES
+ elseif(M(yi,xi)==6) 
+     
+      
+ if(M(yi-1,xi+1)==1)%s1
+ s1=1;
+ end
+ if(M(yi+1,xi+1)==1)%s2 
+ s2=1;
+ end
+ 
+%parametros alfa
+a1= (pi/2)/(1+exp(-(s1-t1)));
+a2= (2*pi)/(1+exp(-(s2-t2)));
+a3= (pi/2)/(1+exp(-(s3-t3)));
+a4= (2*pi)/(1+exp(-(s4-t4)));
+
+%Rotacionales
+r1=[cos(a1) -exp(-1i*a2)*sin(a1); exp(1i*a2)*sin(a1) cos(a1)];
+r2=[cos(a3) -exp(-1i*a4)*sin(a3); exp(1i*a4)*sin(a3) cos(a3)];
+
+ki = kron(r1,r2); %producto tensorial r1xr2
+kf= ki*k00; %multiplicación con el estado incial |00>=[1 0 0 0]
+
+%probabilidades
+% p1=|00> p2=|01> p3=|10> p4=|11>
+p1=norm(kf(1))^2;
+p2=norm(kf(2))^2;
+p3=norm(kf(3))^2;
+p4=norm(kf(4))^2;
+  
+if((p1>p2)&&(p1>p3)&&(p1>p4))
+q=1;
+elseif((p2>p1)&&(p2>p3)&&(p2>p4))
+    q=2;
+    elseif((p3>p1)&&(p3>p2)&&(p3>p4))
+        q=3;
+        elseif((p4>p1)&&(p4>p2)&&(p4>p3))
+            q=4;
+end
+
+ 
+  M(yi,xi)=0; %limpio la posicion inicial
+  
+ %comportamientos 
+ if(q==4)
+ M(yi,xi)=2;  %gira 90° horario
+ else
+     if(q==1)
+     if(M(yi-1,xi+1)==0)     
+     xi=xi+1; yi=yi-1; %adelante izquierda
+     else
+     pe=10; %penalización    
+     end
+elseif(q==2)
+     if(M(yi+1,xi+1)==0)    
+    xi=xi+1; yi=yi+1; %adelante derecha
+     else
+     pe=10; %penalización    
+     end    
+elseif(q==3)
+     if(M(yi,xi+1)==0)     
+     xi=xi+1; %adelante 
+     else
+     pe=10; %penalización    
+     end       
+     end
+     M(yi,xi)=6;
+ end
+ %fin del if del sentido ESTE del robot
+ 
+  %---------------------------------------------------------------------------------------------------SENTIDO SUR
+ %%% LECTURA DE SENSORES
+ elseif(M(yi,xi)==2) 
+  
+ if(M(yi+1,xi+1)==1)%s1
+ s1=1;
+ end
+ if(M(yi+1,xi-1)==1)%s2 
+ s2=1;
+ end
+ 
+%parametros alfa
+a1= (pi/2)/(1+exp(-(s1-t1)));
+a2= (2*pi)/(1+exp(-(s2-t2)));
+a3= (pi/2)/(1+exp(-(s3-t3)));
+a4= (2*pi)/(1+exp(-(s4-t4)));
+
+%Rotacionales
+r1=[cos(a1) -exp(-1i*a2)*sin(a1); exp(1i*a2)*sin(a1) cos(a1)];
+r2=[cos(a3) -exp(-1i*a4)*sin(a3); exp(1i*a4)*sin(a3) cos(a3)];
+
+ki = kron(r1,r2); %producto tensorial r1xr2
+kf= ki*k00; %multiplicación con el estado incial |00>=[1 0 0 0]
+
+%probabilidades
+% p1=|00> p2=|01> p3=|10> p4=|11>
+p1=norm(kf(1))^2;
+p2=norm(kf(2))^2;
+p3=norm(kf(3))^2;
+p4=norm(kf(4))^2;
+  
+if((p1>p2)&&(p1>p3)&&(p1>p4))
+q=1;
+elseif((p2>p1)&&(p2>p3)&&(p2>p4))
+    q=2;
+    elseif((p3>p1)&&(p3>p2)&&(p3>p4))
+        q=3;
+        elseif((p4>p1)&&(p4>p2)&&(p4>p3))
+            q=4;
+end
+
+ 
+  M(yi,xi)=0; %limpio la posicion inicial
+  
+ %comportamientos 
+ if(q==4)
+ M(yi,xi)=4;  %gira 90° horario
+ else
+     if(q==1)
+     if(M(yi+1,xi+1)==0)     
+     xi=xi+1; yi=yi+1; %adelante izquierda
+     else
+     pe=10; %penalización    
+     end
+elseif(q==2)
+     if(M(yi+1,xi-1)==0)     
+     xi=xi-1; yi=yi+1; %adelante derecha
+     else
+     pe=10; %penalización    
+     end    
+elseif(q==3)
+     if(M(yi+1,xi)==0)     
+     yi=yi+1; %adelante 
+     else
+     pe=10; %penalización    
+     end     
+     end
+     M(yi,xi)=2;
+ end
+ %fin del if del sentido SUR del robot
+ 
+  %---------------------------------------------------------------------------------------------------SENTIDO OESTE
+ %%% LECTURA DE SENSORES
+ elseif(M(yi,xi)==4) 
+ 
+ if(M(yi+1,xi-1)==1)%s1
+ s1=1;
+ end
+ if(M(yi-1,xi-1)==1)%s2 
+ s2=1;
+ end
+ 
+%parametros alfa
+a1= (pi/2)/(1+exp(-(s1-t1)));
+a2= (2*pi)/(1+exp(-(s2-t2)));
+a3= (pi/2)/(1+exp(-(s3-t3)));
+a4= (2*pi)/(1+exp(-(s4-t4)));
+
+%Rotacionales
+r1=[cos(a1) -exp(-1i*a2)*sin(a1); exp(1i*a2)*sin(a1) cos(a1)];
+r2=[cos(a3) -exp(-1i*a4)*sin(a3); exp(1i*a4)*sin(a3) cos(a3)];
+
+ki = kron(r1,r2); %producto tensorial r1xr2
+kf= ki*k00; %multiplicación con el estado incial |00>=[1 0 0 0]
+
+%probabilidades
+% p1=|00> p2=|01> p3=|10> p4=|11>
+p1=norm(kf(1))^2;
+p2=norm(kf(2))^2;
+p3=norm(kf(3))^2;
+p4=norm(kf(4))^2;
+  
+if((p1>p2)&&(p1>p3)&&(p1>p4))
+q=1;
+elseif((p2>p1)&&(p2>p3)&&(p2>p4))
+    q=2;
+    elseif((p3>p1)&&(p3>p2)&&(p3>p4))
+        q=3;
+        elseif((p4>p1)&&(p4>p2)&&(p4>p3))
+            q=4;
+end
+
+ 
+  M(yi,xi)=0; %limpio la posicion inicial
+  
+ %comportamientos 
+ if(q==4)
+ M(yi,xi)=8;  %gira 90° horario
+ else
+     if(q==1)
+     if(M(yi+1,xi-1)==0)     
+     xi=xi-1; yi=yi+1; %adelante izquierda
+     else
+     pe=10; %penalización    
+     end
+elseif(q==2)
+     if(M(yi-1,xi-1)==0)     
+     xi=xi-1; yi=yi-1; %adelante derecha
+     else
+     pe=10; %penalización    
+     end    
+elseif(q==3)
+     if(M(yi,xi-1)==0)     
+     xi=xi-1; %adelante 
+     else
+     pe=10; %penalización    
+     end      
+     end
+     M(yi,xi)=4;
+ end
+ 
+ end %Fin del if del sentido OESTE del robot
+ %FIN DE 1 CICLO COMPLETO ANTES DE LA PERTURBACION DE LOS
+ %THETA------------------------------------------------------------------------------------------------------------------------------
+ %----------------------------------------------------------------------------------------------------------------------
+ Mn=M(yi,xi);xn=xi; yn=yi; %valores nuevos 
+ M(yi,xi)=0;
+ s1=0; s2=0;
+ e1=sqrt((xi-xf)^2+(yi-yf)^2)+pe;
+ pe=0;
+ 
+ if(h<0)
+    h=0.01;
+ end
+ 
+ tp1=t1; tp2=t2; tp3=t3; tp4=t4;
+ t1=t1+h*dw(1); t2=t2+h*dw(2); t3=t3+h*dw(3); t4=t4+h*dw(4);
+ xi=xp; yi=yp;
+ M(yp,xp)=Mp; %valores pasados 
+ 
+  %---------------------------------------------------------------------------------------------------SENTIDO NORTE
+ %%% LECTURA DE SENSORES
+ if(M(yi,xi)==8) 
+ 
+ if(M(yi-1,xi-1)==1)%s1
+ s1=1;
+ end
+ if(M(yi-1,xi+1)==1)%s2
+ s2=1;
+ end
+ 
+%parametros alfa
+a1= (pi/2)/(1+exp(-(s1-t1)));
+a2= (2*pi)/(1+exp(-(s2-t2)));
+a3= (pi/2)/(1+exp(-(s3-t3)));
+a4= (2*pi)/(1+exp(-(s4-t4)));
+
+%Rotacionales
+r1=[cos(a1) -exp(-1i*a2)*sin(a1); exp(1i*a2)*sin(a1) cos(a1)];
+r2=[cos(a3) -exp(-1i*a4)*sin(a3); exp(1i*a4)*sin(a3) cos(a3)];
+
+ki = kron(r1,r2); %producto tensorial r1xr2
+kf= ki*k00; %multiplicación con el estado incial |00>=[1 0 0 0]
+
+%probabilidades
+% p1=|00> p2=|01> p3=|10> p4=|11>
+p1=norm(kf(1))^2;
+p2=norm(kf(2))^2;
+p3=norm(kf(3))^2;
+p4=norm(kf(4))^2;
+  
+if((p1>p2)&&(p1>p3)&&(p1>p4))
+q=1;
+elseif((p2>p1)&&(p2>p3)&&(p2>p4))
+    q=2;
+    elseif((p3>p1)&&(p3>p2)&&(p3>p4))
+        q=3;
+        elseif((p4>p1)&&(p4>p2)&&(p4>p3))
+            q=4;
+end
+
+  disp("Tablero pasado")
+  disp(M)
+  M(yi,xi)=0; %limpio la posicion inicial
+  
+ %comportamientos 
+ if(q==4)
+ M(yi,xi)=6; %gira 90° horario
+ else
+     if(q==1)
+     if(M(yi-1,xi-1)==0)    
+     xi=xi-1; yi=yi-1; %adelante izquierda
+     else
+     pe=10; %penalización    
+     end
+elseif(q==2)
+     if(M(yi-1,xi+1)==0)    
+     xi=xi+1; yi=yi-1; %adelante derecha
+     else
+     pe=10; %penalización    
+     end    
+elseif(q==3)
+     if(M(yi-1,xi)==0)
+     yi=yi-1; %adelante 
+     else
+     pe=10; %penalización    
+     end   
+     end
+     M(yi,xi)=8;
+ end
+ 
+ %fin del if del sentido NORTE del robot
+ 
+  %---------------------------------------------------------------------------------------------------SENTIDO ESTE
+ %%% LECTURA DE SENSORES
+ elseif(M(yi,xi)==6) 
+     
+      
+ if(M(yi-1,xi+1)==1)%s1
+ s1=1;
+ end
+ if(M(yi+1,xi+1)==1)%s2 
+ s2=1;
+ end
+ 
+%parametros alfa
+a1= (pi/2)/(1+exp(-(s1-t1)));
+a2= (2*pi)/(1+exp(-(s2-t2)));
+a3= (pi/2)/(1+exp(-(s3-t3)));
+a4= (2*pi)/(1+exp(-(s4-t4)));
+
+%Rotacionales
+r1=[cos(a1) -exp(-1i*a2)*sin(a1); exp(1i*a2)*sin(a1) cos(a1)];
+r2=[cos(a3) -exp(-1i*a4)*sin(a3); exp(1i*a4)*sin(a3) cos(a3)];
+
+ki = kron(r1,r2); %producto tensorial r1xr2
+kf= ki*k00; %multiplicación con el estado incial |00>=[1 0 0 0]
+
+%probabilidades
+% p1=|00> p2=|01> p3=|10> p4=|11>
+p1=norm(kf(1))^2;
+p2=norm(kf(2))^2;
+p3=norm(kf(3))^2;
+p4=norm(kf(4))^2;
+  
+if((p1>p2)&&(p1>p3)&&(p1>p4))
+q=1;
+elseif((p2>p1)&&(p2>p3)&&(p2>p4))
+    q=2;
+    elseif((p3>p1)&&(p3>p2)&&(p3>p4))
+        q=3;
+        elseif((p4>p1)&&(p4>p2)&&(p4>p3))
+            q=4;
+end
+
+  disp("Tablero pasado")
+  disp(M)
+  M(yi,xi)=0; %limpio la posicion inicial
+  
+ %comportamientos 
+ if(q==4)
+ M(yi,xi)=2;  %gira 90° horario
+ else
+     if(q==1)
+     if(M(yi-1,xi+1)==0)     
+     xi=xi+1; yi=yi-1; %adelante izquierda
+     else
+     pe=10; %penalización    
+     end
+elseif(q==2)
+     if(M(yi+1,xi+1)==0)    
+    xi=xi+1; yi=yi+1; %adelante derecha
+     else
+     pe=10; %penalización    
+     end    
+elseif(q==3)
+     if(M(yi,xi+1)==0)     
+     xi=xi+1; %adelante 
+     else
+     pe=10; %penalización    
+     end       
+     end
+     M(yi,xi)=6;
+ end
+ %fin del if del sentido ESTE del robot
+ 
+  %---------------------------------------------------------------------------------------------------SENTIDO SUR
+ %%% LECTURA DE SENSORES
+ elseif(M(yi,xi)==2) 
+  
+ if(M(yi+1,xi+1)==1)%s1
+ s1=1;
+ end
+ if(M(yi+1,xi-1)==1)%s2 
+ s2=1;
+ end
+ 
+%parametros alfa
+a1= (pi/2)/(1+exp(-(s1-t1)));
+a2= (2*pi)/(1+exp(-(s2-t2)));
+a3= (pi/2)/(1+exp(-(s3-t3)));
+a4= (2*pi)/(1+exp(-(s4-t4)));
+
+%Rotacionales
+r1=[cos(a1) -exp(-1i*a2)*sin(a1); exp(1i*a2)*sin(a1) cos(a1)];
+r2=[cos(a3) -exp(-1i*a4)*sin(a3); exp(1i*a4)*sin(a3) cos(a3)];
+
+ki = kron(r1,r2); %producto tensorial r1xr2
+kf= ki*k00; %multiplicación con el estado incial |00>=[1 0 0 0]
+
+%probabilidades
+% p1=|00> p2=|01> p3=|10> p4=|11>
+p1=norm(kf(1))^2;
+p2=norm(kf(2))^2;
+p3=norm(kf(3))^2;
+p4=norm(kf(4))^2;
+  
+if((p1>p2)&&(p1>p3)&&(p1>p4))
+q=1;
+elseif((p2>p1)&&(p2>p3)&&(p2>p4))
+    q=2;
+    elseif((p3>p1)&&(p3>p2)&&(p3>p4))
+        q=3;
+        elseif((p4>p1)&&(p4>p2)&&(p4>p3))
+            q=4;
+end
+
+  disp("Tablero pasado")
+  disp(M)
+  M(yi,xi)=0; %limpio la posicion inicial
+  
+ %comportamientos 
+ if(q==4)
+ M(yi,xi)=4;  %gira 90° horario
+ else
+     if(q==1)
+     if(M(yi+1,xi+1)==0)     
+     xi=xi+1; yi=yi+1; %adelante izquierda
+     else
+     pe=10; %penalización    
+     end
+elseif(q==2)
+     if(M(yi+1,xi-1)==0)     
+     xi=xi-1; yi=yi+1; %adelante derecha
+     else
+     pe=10; %penalización    
+     end    
+elseif(q==3)
+     if(M(yi+1,xi)==0)     
+     yi=yi+1; %adelante 
+     else
+     pe=10; %penalización    
+     end     
+     end
+     M(yi,xi)=2;
+ end
+ %fin del if del sentido SUR del robot
+ 
+  %---------------------------------------------------------------------------------------------------SENTIDO OESTE
+ %%% LECTURA DE SENSORES
+ elseif(M(yi,xi)==4) 
+ 
+ if(M(yi+1,xi-1)==1)%s1
+ s1=1;
+ end
+ if(M(yi-1,xi-1)==1)%s2 
+ s2=1;
+ end
+ 
+%parametros alfa
+a1= (pi/2)/(1+exp(-(s1-t1)));
+a2= (2*pi)/(1+exp(-(s2-t2)));
+a3= (pi/2)/(1+exp(-(s3-t3)));
+a4= (2*pi)/(1+exp(-(s4-t4)));
+
+%Rotacionales
+r1=[cos(a1) -exp(-1i*a2)*sin(a1); exp(1i*a2)*sin(a1) cos(a1)];
+r2=[cos(a3) -exp(-1i*a4)*sin(a3); exp(1i*a4)*sin(a3) cos(a3)];
+
+ki = kron(r1,r2); %producto tensorial r1xr2
+kf= ki*k00; %multiplicación con el estado incial |00>=[1 0 0 0]
+
+%probabilidades
+% p1=|00> p2=|01> p3=|10> p4=|11>
+p1=norm(kf(1))^2;
+p2=norm(kf(2))^2;
+p3=norm(kf(3))^2;
+p4=norm(kf(4))^2;
+  
+if((p1>p2)&&(p1>p3)&&(p1>p4))
+q=1;
+elseif((p2>p1)&&(p2>p3)&&(p2>p4))
+    q=2;
+    elseif((p3>p1)&&(p3>p2)&&(p3>p4))
+        q=3;
+        elseif((p4>p1)&&(p4>p2)&&(p4>p3))
+            q=4;
+end
+
+  disp("Tablero pasado")
+  disp(M)
+  M(yi,xi)=0; %limpio la posicion inicial
+  
+ %comportamientos 
+ if(q==4)
+ M(yi,xi)=8;  %gira 90° horario
+ else
+     if(q==1)
+     if(M(yi+1,xi-1)==0)     
+     xi=xi-1; yi=yi+1; %adelante izquierda
+     else
+     pe=10; %penalización    
+     end
+elseif(q==2)
+     if(M(yi-1,xi-1)==0)     
+     xi=xi-1; yi=yi-1; %adelante derecha
+     else
+     pe=10; %penalización    
+     end    
+elseif(q==3)
+     if(M(yi,xi-1)==0)     
+     xi=xi-1; %adelante 
+     else
+     pe=10; %penalización    
+     end      
+     end
+     M(yi,xi)=4;
+ end
+ 
+ end %Fin del if del sentido OESTE del robot
+ %FIN DE 1 CICLO COMPLETO DESPUES DE LA PERTURBACION DE LOS THETA
+ e2=sqrt((xi-xf)^2+(yi-yf)^2)+pe;
+ 
+ %actualización de parametros theta
+
+    if(e2<e1) %exito
+        %yi=yi xi=xi dejo los ultimos (despues de perturbar los theta)
+        %dejo el ultimo movimiento hecho M(y,x)
+        s=s+1;
+        J(Npaso)=e2;
+    else %fracaso
+        t1=tp1;t2=tp2;t3=tp3;t4=tp4;
+        M(yi,xi)=0; %borro el ultimo movimiento
+        xi=xn; yi=yn; 
+        M(yi,xi)=Mn; %dejo el movimiento sin las perturbaciones de los thetas
+        dw=100*rand(4,1); %nuevos valores aleatoreos para realizar variaciones 
+        f=f+1;
+        J(Npaso)=e1;
+    end
+
+    
+    if(s>2)
+        h=h+0.05;
+        s=0;
+    end
+    
+    if(f>5)
+        h=h-0.05;
+        f=0;
+    end
+    disp("Tablero actual")
+    disp(M)
+    if((xi==xf)&&(yi==yf))
+    Npasos=Pmax; %fin del programa, llegó al punto deseado
+    J(Npasos)=0;
+    end
+    
+    
+ end
+
+
+
+
