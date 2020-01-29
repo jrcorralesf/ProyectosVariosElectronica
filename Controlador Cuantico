@@ -1,0 +1,224 @@
+clc
+clear 
+k00= [1 ; 0 ; 0 ; 0]; %vector columna
+T=0.01;
+t=0:T:10;
+v=zeros(1,1001);
+x11=zeros(1,1001);x21=zeros(1,1001);x12=zeros(1,1001);x22=zeros(1,1001);
+y1=zeros(1,1001);y2=zeros(1,1001); yt=zeros(1,1001);
+u1=zeros(1,1001);u2=zeros(1,1001);
+delta11=zeros(1,1001);delta21=zeros(1,1001);delta12=zeros(1,1001);delta22=zeros(1,1001);
+d11=zeros(1,1001);d21=zeros(1,1001);d12=zeros(1,1001);d22=zeros(1,1001);
+f1=zeros(1,1001);f2=zeros(1,1001); ft=zeros(1,1001);
+e1=zeros(1,1001);e2=zeros(1,1001);
+J1=zeros(1,1001);J2=zeros(1,1001); Jt=zeros(1,1001);
+z=zeros(1,1001);
+A2=0.1;
+A1=A2/2;
+
+for j=1:1001 %señal de pulsos discretizada
+        if t(j)>=0&&t(j)<2
+            v(j)=A1;
+        elseif t(j)>=2&&t(j)<3
+            v(j)=-A1;
+        elseif t(j)>=3&&t(j)<6
+            v(j)=A2;
+        elseif t(j)>=6&&t(j)<8
+            v(j)=-A2;
+        else 
+            v(j)=A1;
+        end
+end
+
+for k=1:1001
+    
+   if k==1
+       z(k)=(A1*T)/(T+1);
+   else
+       z(k)=(T*v(k)+z(k-1))/(T+1);
+   end
+end
+
+yd=z;
+
+% figure()
+% plot(t,z,'-.','LineWidth',5);
+% hold on
+% grid on
+% grid minor
+% plot (t,v,'LineWidth',3);
+
+
+k0=1;
+k1=1.5;
+x1b1=0.05;
+x2b1=0.05;
+k2=k1;
+x1b2=x1b1;
+x2b2=x2b1;
+
+%k1=x1b1=x2b1=1;J1=1.7534
+%k1=x1b1=x2b1=0.5;J1=0.6140
+%k1=x1b1=x2b1=0.25;J1=0.1661
+%k1=x1b1=x2b1=0.125;J1=0.0671
+
+w1 = -1 + (1+1)*rand(1,3);
+
+
+it_max=100;
+h=0.1;
+i_s=0;
+i_f=0;
+
+dw=randn(1,3);
+
+
+for it=1:it_max
+    
+    if h<0
+        h=0.01;
+    end
+    
+    w2=w1+h*dw;
+    
+    theta11=w1(1);
+    theta21=w1(2);
+    g01=w1(3);
+    
+    theta12=w2(1);
+    theta22=w2(2);
+    g02=w2(3);
+    
+    for j=1:1001
+      
+    
+ 
+        if(j==1)
+            u1(j)=k1*v(j);
+            x11(j)=0;
+            x21(j)=0.5*T*u1(j);
+            y1(j)=x11(j);
+            
+            u2(j)=k2*v(j);
+            x12(j)=0;
+            x22(j)=0.5*T*u2(j);
+            y2(j)=x12(j);
+            
+            delta11(j)=pi/(1+exp(-theta11));
+            delta21(j)=pi/(1+exp(-theta21));
+            d11(j)=-x1b1;
+            d21(j)=-x2b1;
+          %  f1(j)=g01+(norm(cos(delta21(j)/2)*cos(delta11(j)/2)))^2*d11(j)+(norm(cos(delta21(j)/2)*sin(delta11(j)/2)))^2*d21(j)+(norm(sin(delta21(j)/2)*cos(delta11(j)/2)))^2*d11(j)^.2+(norm(sin(delta21(j)/2)*sin(delta11(j)/2)))^2*d21(j).^2;           
+            
+            %Rotacionales
+            a1=delta11(j);
+            a2=delta21(j);
+            r1=[cos(a1/2) -sin(a1/2); sin(a1/2) cos(a1/2)];
+            r2=[cos(a2/2) -sin(a2/2); sin(a2/2) cos(a2/2)];
+            ki = kron(r2,r1); %producto tensorial r2xr1
+            kf= ki*k00; %multiplicación con el estado incial |00>=[1 0 0 0]
+            G=[d11(j) 0 0 0; 0 d21(j) 0 0; 0 0 (d11(j).^2) 0; 0 0 0 (d21(j).^2)];
+            fx1=ki*G*kf;
+            f1(j)=norm(fx1);
+            
+            
+            delta12(j)=pi/(1+exp(-theta12));
+            delta22(j)=pi/(1+exp(-theta22));
+            d12(j)=-x1b2;
+            d22(j)=-x2b2;
+           % f2(j)=g02+(abs(cos(delta22(j)/2)*cos(delta12(j)/2)))^2*d12(j)+(abs(cos(delta22(j)/2)*sin(delta12(j)/2)))^2*d22(j)+(abs(sin(delta22(j)/2)*cos(delta12(j)/2)))^2*d12(j).^2+(abs(sin(delta22(j)/2)*sin(delta12(j)/2)))^2*d22(j).^2;
+       
+            %Rotacionales
+            a1=delta12(j);
+            a2=delta22(j);
+            r1=[cos(a1/2) -sin(a1/2); sin(a1/2) cos(a1/2)];
+            r2=[cos(a2/2) -sin(a2/2); sin(a2/2) cos(a2/2)];
+            ki = kron(r2,r1); %producto tensorial r2xr1
+            kf= ki*k00; %multiplicación con el estado incial |00>=[1 0 0 0]
+            G=[d12(j) 0 0 0; 0 d22(j) 0 0; 0 0 (d12(j).^2) 0; 0 0 0 (d22(j).^2)];
+            fx2=ki*G*kf;
+            f2(j)=norm(fx2);
+        
+        else
+            u1(j)=k1*(v(j)+f1(j-1));
+            x11(j)=T*x21(j-1)+x11(j-1);
+            x21(j)=-9.8*T*sin(x11(j-1))+(1-0.5*T)*x21(j-1)+0.5*T*u1(j);
+            y1(j)=x11(j);
+            
+            u2(j)=k2*(v(j)+f2(j-1));
+            x12(j)=T*x22(j-1)+x12(j-1);
+            x22(j)=-9.8*T*sin(x12(j-1))+(1-0.5*T)*x22(j-1)+0.5*T*u2(j);
+            y2(j)=x12(j);
+            
+            delta11(j)=pi/(1+exp(-(x11(j)-theta11)));
+            delta21(j)=pi/(1+exp(-(x21(j)-theta21)));
+            d11(j)=x11(j)-x1b1;
+            d21(j)=x21(j)-x2b1;
+           % f1(j)=g01+(abs(cos(delta21(j)/2)*cos(delta11(j)/2)))^2*d11(j)+(abs(cos(delta21(j)/2)*sin(delta11(j)/2)))^2*d21(j)+(abs(sin(delta21(j)/2)*cos(delta11(j)/2)))^2*d11(j)^.2+(abs(sin(delta21(j)/2)*sin(delta11(j)/2)))^2*d21(j).^2;           
+           
+            %Rotacionales
+            a1=delta11(j);
+            a2=delta21(j);
+            r1=[cos(a1/2) -sin(a1/2); sin(a1/2) cos(a1/2)];
+            r2=[cos(a2/2) -sin(a2/2); sin(a2/2) cos(a2/2)];
+            ki = kron(r2,r1); %producto tensorial r2xr1
+            kf= ki*k00; %multiplicación con el estado incial |00>=[1 0 0 0]
+            G=[d11(j) 0 0 0; 0 d21(j) 0 0; 0 0 (d11(j).^2) 0; 0 0 0 (d21(j).^2)];
+            fx1=ki*G*kf;
+            f1(j)=norm(fx1);
+            
+            delta12(j)=pi/(1+exp(-(x12(j)+theta12)));
+            delta22(j)=pi/(1+exp(-(x22(j)+theta22)));
+            d12(j)=x12(j)-x1b2;
+            d22(j)=x22(j)-x2b2;
+           % f2(j)=g02+(abs(cos(delta22(j)/2)*cos(delta12(j)/2)))^2*d12(j)+(abs(cos(delta22(j)/2)*sin(delta12(j)/2)))^2*d22(j)+(abs(sin(delta22(j)/2)*cos(delta12(j)/2)))^2*d12(j).^2+(abs(sin(delta22(j)/2)*sin(delta12(j)/2)))^2*d22(j).^2;
+       
+             %Rotacionales
+            a1=delta12(j);
+            a2=delta22(j);
+            r1=[cos(a1/2) -sin(a1/2); sin(a1/2) cos(a1/2)];
+            r2=[cos(a2/2) -sin(a2/2); sin(a2/2) cos(a2/2)];
+            ki = kron(r2,r1); %producto tensorial r2xr1
+            kf= ki*k00; %multiplicación con el estado incial |00>=[1 0 0 0]
+            G=[d12(j) 0 0 0; 0 d22(j) 0 0; 0 0 (d12(j).^2) 0; 0 0 0 (d22(j).^2)];
+            fx2=ki*G*kf;
+            f2(j)=norm(fx2);
+        
+        end
+    
+        e1(j)=(yd(j)-y1(j));
+        e2(j)=(yd(j)-y2(j));
+    
+    end
+    
+    J1(it)=sum(e1.^2);
+    J2(it)=sum(e2.^2);
+    
+    if J2(it)<J1(it)
+        w1=w2;
+        i_s=i_s+1;
+        ft=f2;
+        Jt=J2;
+    else
+        dw=10*randn(1,3);
+        i_f=i_f+1;
+        ft=f1;
+        Jt=J1;
+    end
+    if i_s>2
+        h=h+0.05;
+        i_s=0;
+    end
+    if i_f>5
+        h=h-0.05;
+        i_f=0;
+    end
+end
+min(Jt)
+%plot(Jt)
+figure()
+plot(t,z,'LineWidth',3);
+hold on
+grid on
+grid minor
+plot (t,ft,'-.','LineWidth',3);
