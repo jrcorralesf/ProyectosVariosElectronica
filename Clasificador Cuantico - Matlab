@@ -12,13 +12,15 @@ clear
  %n=norte=8 s=sur=2 e=este=6 o=oest=4 
  xi=9;
  yi=9;
- M(yi,xi)=2;   %para reconocer dónde se ubica el robot y en que sentido
+ M(yi,xi)=8;   %para reconocer dónde se ubica el robot y en que sentido
  %posicion deseada
- xf=10; yf=10;
+ xf=3; yf=3;
  
-dw=rand(4,1);
-t1=rand(1); t2=rand(1); t3=rand(1); t4=rand(1); %thetas inicializados con valores aleatorios de 0 a 1
-Pmax=2; %N de pasos a realizar
+%dw=100*rand(4,1);
+dw=-100+(100+100)*rand(4,1); %se permiten variaciones entre -100 y 100 
+%t1=rand(1); t2=rand(1); t3=rand(1); t4=rand(1); %thetas inicializados con valores aleatorios de 0 a 1
+t1=-1.12; t2=1.5829; t3=-0.1154; t4=0.8001; %valores entrenados en el ciclo pasado para iterar nuevamente con otras posiciones
+Pmax=1000; %N de pasos a realizar
 Npaso=0; %contador de pasos realizados
 h=0.01; %tasa de aprendizaje
 s=0; %pasos exitosos
@@ -642,7 +644,8 @@ elseif(q==3)
         M(yi,xi)=0; %borro el ultimo movimiento
         xi=xn; yi=yn; 
         M(yi,xi)=Mn; %dejo el movimiento sin las perturbaciones de los thetas
-        dw=100*rand(4,1); %nuevos valores aleatoreos para realizar variaciones 
+        %dw=100*rand(4,1); %nuevos valores aleatoreos para realizar variaciones 
+        dw=-100+(100+100)*rand(4,1);
         f=f+1;
         J(Npaso)=e1;
     end
@@ -666,7 +669,3 @@ elseif(q==3)
     
     
  end
-
-
-
-
