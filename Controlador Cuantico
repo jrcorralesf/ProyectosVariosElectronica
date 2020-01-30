@@ -49,29 +49,20 @@ yd=z;
 % plot (t,v,'LineWidth',3);
 
 
-k0=1;
-k1=1.5;
-x1b1=0.05;
-x2b1=0.05;
+
+k1=4.0;
+x1b1=0.1;
+x2b1=0.1;
 k2=k1;
 x1b2=x1b1;
 x2b2=x2b1;
 
-%k1=x1b1=x2b1=1;J1=1.7534
-%k1=x1b1=x2b1=0.5;J1=0.6140
-%k1=x1b1=x2b1=0.25;J1=0.1661
-%k1=x1b1=x2b1=0.125;J1=0.0671
-
 w1 = -1 + (1+1)*rand(1,3);
-
-
 it_max=100;
 h=0.1;
 i_s=0;
 i_f=0;
-
 dw=randn(1,3);
-
 
 for it=1:it_max
     
@@ -89,10 +80,7 @@ for it=1:it_max
     theta22=w2(2);
     g02=w2(3);
     
-    for j=1:1001
-      
-    
- 
+    for j=1:1001 %recorre toda la secuencia de pulsos
         if(j==1)
             u1(j)=k1*v(j);
             x11(j)=0;
@@ -108,8 +96,7 @@ for it=1:it_max
             delta21(j)=pi/(1+exp(-theta21));
             d11(j)=-x1b1;
             d21(j)=-x2b1;
-          %  f1(j)=g01+(norm(cos(delta21(j)/2)*cos(delta11(j)/2)))^2*d11(j)+(norm(cos(delta21(j)/2)*sin(delta11(j)/2)))^2*d21(j)+(norm(sin(delta21(j)/2)*cos(delta11(j)/2)))^2*d11(j)^.2+(norm(sin(delta21(j)/2)*sin(delta11(j)/2)))^2*d21(j).^2;           
-            
+          
             %Rotacionales
             a1=delta11(j);
             a2=delta21(j);
@@ -118,16 +105,15 @@ for it=1:it_max
             ki = kron(r2,r1); %producto tensorial r2xr1
             kf= ki*k00; %multiplicación con el estado incial |00>=[1 0 0 0]
             G=[d11(j) 0 0 0; 0 d21(j) 0 0; 0 0 (d11(j).^2) 0; 0 0 0 (d21(j).^2)];
-            fx1=ki*G*kf;
-            f1(j)=norm(fx1);
+            fx1=kf'*G*kf; %el operador bra <y| es vector fila y el ket |y> es vector columna
+            f1(j)=fx1;
             
             
             delta12(j)=pi/(1+exp(-theta12));
             delta22(j)=pi/(1+exp(-theta22));
             d12(j)=-x1b2;
             d22(j)=-x2b2;
-           % f2(j)=g02+(abs(cos(delta22(j)/2)*cos(delta12(j)/2)))^2*d12(j)+(abs(cos(delta22(j)/2)*sin(delta12(j)/2)))^2*d22(j)+(abs(sin(delta22(j)/2)*cos(delta12(j)/2)))^2*d12(j).^2+(abs(sin(delta22(j)/2)*sin(delta12(j)/2)))^2*d22(j).^2;
-       
+           
             %Rotacionales
             a1=delta12(j);
             a2=delta22(j);
@@ -136,8 +122,8 @@ for it=1:it_max
             ki = kron(r2,r1); %producto tensorial r2xr1
             kf= ki*k00; %multiplicación con el estado incial |00>=[1 0 0 0]
             G=[d12(j) 0 0 0; 0 d22(j) 0 0; 0 0 (d12(j).^2) 0; 0 0 0 (d22(j).^2)];
-            fx2=ki*G*kf;
-            f2(j)=norm(fx2);
+            fx2=kf'*G*kf;
+            f2(j)=fx2;
         
         else
             u1(j)=k1*(v(j)+f1(j-1));
@@ -154,8 +140,7 @@ for it=1:it_max
             delta21(j)=pi/(1+exp(-(x21(j)-theta21)));
             d11(j)=x11(j)-x1b1;
             d21(j)=x21(j)-x2b1;
-           % f1(j)=g01+(abs(cos(delta21(j)/2)*cos(delta11(j)/2)))^2*d11(j)+(abs(cos(delta21(j)/2)*sin(delta11(j)/2)))^2*d21(j)+(abs(sin(delta21(j)/2)*cos(delta11(j)/2)))^2*d11(j)^.2+(abs(sin(delta21(j)/2)*sin(delta11(j)/2)))^2*d21(j).^2;           
-           
+          
             %Rotacionales
             a1=delta11(j);
             a2=delta21(j);
@@ -164,15 +149,14 @@ for it=1:it_max
             ki = kron(r2,r1); %producto tensorial r2xr1
             kf= ki*k00; %multiplicación con el estado incial |00>=[1 0 0 0]
             G=[d11(j) 0 0 0; 0 d21(j) 0 0; 0 0 (d11(j).^2) 0; 0 0 0 (d21(j).^2)];
-            fx1=ki*G*kf;
-            f1(j)=norm(fx1);
+            fx1=kf'*G*kf;
+            f1(j)=fx1;
             
             delta12(j)=pi/(1+exp(-(x12(j)+theta12)));
             delta22(j)=pi/(1+exp(-(x22(j)+theta22)));
             d12(j)=x12(j)-x1b2;
             d22(j)=x22(j)-x2b2;
-           % f2(j)=g02+(abs(cos(delta22(j)/2)*cos(delta12(j)/2)))^2*d12(j)+(abs(cos(delta22(j)/2)*sin(delta12(j)/2)))^2*d22(j)+(abs(sin(delta22(j)/2)*cos(delta12(j)/2)))^2*d12(j).^2+(abs(sin(delta22(j)/2)*sin(delta12(j)/2)))^2*d22(j).^2;
-       
+           
              %Rotacionales
             a1=delta12(j);
             a2=delta22(j);
@@ -181,8 +165,8 @@ for it=1:it_max
             ki = kron(r2,r1); %producto tensorial r2xr1
             kf= ki*k00; %multiplicación con el estado incial |00>=[1 0 0 0]
             G=[d12(j) 0 0 0; 0 d22(j) 0 0; 0 0 (d12(j).^2) 0; 0 0 0 (d22(j).^2)];
-            fx2=ki*G*kf;
-            f2(j)=norm(fx2);
+            fx2=kf'*G*kf;
+            f2(j)=fx2;
         
         end
     
@@ -197,13 +181,14 @@ for it=1:it_max
     if J2(it)<J1(it)
         w1=w2;
         i_s=i_s+1;
-        ft=f2;
-        Jt=J2;
+        Jt(it)=J2(it);
+        yf=y2;
     else
-        dw=10*randn(1,3);
+       % dw=randn(1,3);
+        dw=-1 + (1+1)*randn(1,3);
         i_f=i_f+1;
-        ft=f1;
-        Jt=J1;
+        Jt(it)=J1(it);
+        yf=y1;
     end
     if i_s>2
         h=h+0.05;
@@ -221,4 +206,4 @@ plot(t,z,'LineWidth',3);
 hold on
 grid on
 grid minor
-plot (t,ft,'-.','LineWidth',3);
+plot (t,yf,'-.','LineWidth',3);
