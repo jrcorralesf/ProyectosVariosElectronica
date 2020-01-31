@@ -10,27 +10,33 @@ clear
 
  %%%posicion inicial de robot 
  %n=norte=8 s=sur=2 e=este=6 o=oest=4 
- xi=9;
- yi=9;
- M(yi,xi)=8;   %para reconocer dónde se ubica el robot y en que sentido
+ xi=6;
+ yi=3;
+ M(yi,xi)=4;   %para reconocer dónde se ubica el robot y en que sentido
  %posicion deseada
- xf=3; yf=3;
+ xf=3; yf=5;
  
 %dw=100*rand(4,1);
-dw=-100+(100+100)*rand(4,1); %se permiten variaciones entre -100 y 100 
-%t1=rand(1); t2=rand(1); t3=rand(1); t4=rand(1); %thetas inicializados con valores aleatorios de 0 a 1
-t1=-1.12; t2=1.5829; t3=-0.1154; t4=0.8001; %valores entrenados en el ciclo pasado para iterar nuevamente con otras posiciones
-Pmax=1000; %N de pasos a realizar
+dw=-10+(10+10)*rand(4,1); %se permiten variaciones entre -100 y 100 
+t1=rand(1); t2=rand(1); t3=rand(1); t4=rand(1); %thetas inicializados con valores aleatorios de 0 a 1
+%t1=-2.3617; t2=22.4929; t3=62.496; t4=-47.4363; %valores entrenados en el ciclo pasado para iterar nuevamente con otras posiciones
+Pmax=5; %N de pasos a realizar
 Npaso=0; %contador de pasos realizados
+itmax=1000;
 h=0.01; %tasa de aprendizaje
 s=0; %pasos exitosos
 f=0; %pasos erroneos 
-J=rand(Pmax,1);
+J=rand(itmax,1);
+J1=rand(itmax,1);
+J2=rand(itmax,1);
+Mp=M(yi,xi);xp=xi; yp=yi; %valores iniciales 
 
+for it=1:itmax
+ xi=xp; yi=yp;
+ M(yp,xp)=Mp; %valores iniciales 
+ pe=0;
  while Npaso<Pmax 
  Npaso=Npaso+1;
- pe=0;
- Mp=M(yi,xi);xp=xi; yp=yi; %valores pasados 
  s1=0; s2=0;
  s3=(xi-1)/10; %sensores de posición
  s4=(yi-1)/10;
@@ -87,19 +93,19 @@ end
      if(M(yi-1,xi-1)==0)    
      xi=xi-1; yi=yi-1; %adelante izquierda
      else
-     pe=10; %penalización    
+     pe=pe+1; %penalización    
      end
 elseif(q==2)
      if(M(yi-1,xi+1)==0)    
      xi=xi+1; yi=yi-1; %adelante derecha
      else
-     pe=10; %penalización    
+     pe=pe+1; %penalización    
      end    
 elseif(q==3)
      if(M(yi-1,xi)==0)
      yi=yi-1; %adelante 
      else
-     pe=10; %penalización    
+     pe=pe+1; %penalización    
      end   
      end
      M(yi,xi)=8;
@@ -160,19 +166,19 @@ end
      if(M(yi-1,xi+1)==0)     
      xi=xi+1; yi=yi-1; %adelante izquierda
      else
-     pe=10; %penalización    
+     pe=pe+1; %penalización    
      end
 elseif(q==2)
      if(M(yi+1,xi+1)==0)    
     xi=xi+1; yi=yi+1; %adelante derecha
      else
-     pe=10; %penalización    
+     pe=pe+1; %penalización    
      end    
 elseif(q==3)
      if(M(yi,xi+1)==0)     
      xi=xi+1; %adelante 
      else
-     pe=10; %penalización    
+     pe=pe+1; %penalización    
      end       
      end
      M(yi,xi)=6;
@@ -231,19 +237,19 @@ end
      if(M(yi+1,xi+1)==0)     
      xi=xi+1; yi=yi+1; %adelante izquierda
      else
-     pe=10; %penalización    
+     pe=pe+1; %penalización    
      end
 elseif(q==2)
      if(M(yi+1,xi-1)==0)     
      xi=xi-1; yi=yi+1; %adelante derecha
      else
-     pe=10; %penalización    
+     pe=pe+1; %penalización    
      end    
 elseif(q==3)
      if(M(yi+1,xi)==0)     
      yi=yi+1; %adelante 
      else
-     pe=10; %penalización    
+     pe=pe+1; %penalización    
      end     
      end
      M(yi,xi)=2;
@@ -302,19 +308,19 @@ end
      if(M(yi+1,xi-1)==0)     
      xi=xi-1; yi=yi+1; %adelante izquierda
      else
-     pe=10; %penalización    
+     pe=pe+1; %penalización    
      end
 elseif(q==2)
      if(M(yi-1,xi-1)==0)     
      xi=xi-1; yi=yi-1; %adelante derecha
      else
-     pe=10; %penalización    
+     pe=pe+1; %penalización    
      end    
 elseif(q==3)
      if(M(yi,xi-1)==0)     
      xi=xi-1; %adelante 
      else
-     pe=10; %penalización    
+     pe=pe+1; %penalización    
      end      
      end
      M(yi,xi)=4;
@@ -324,11 +330,23 @@ elseif(q==3)
  %FIN DE 1 CICLO COMPLETO ANTES DE LA PERTURBACION DE LOS
  %THETA------------------------------------------------------------------------------------------------------------------------------
  %----------------------------------------------------------------------------------------------------------------------
- Mn=M(yi,xi);xn=xi; yn=yi; %valores nuevos 
- M(yi,xi)=0;
- s1=0; s2=0;
- e1=sqrt((xi-xf)^2+(yi-yf)^2)+pe;
- pe=0;
+     if((xi==xf)&&(yi==yf))
+    Npasos=Pmax; %fin del ciclo, llegó al punto deseado
+    end
+ end
+ 
+  if((xi==xf)&&(yi==yf))
+    J1(it)=0;
+    else
+    e1=sqrt((xi-xf)^2+(yi-yf)^2);
+    J1(it)=e1*1.1+pe/10; %se suma la penalización por avanzar hacia un obstaculo (pe) y la penalizacion por distancia (10%)
+  end
+    
+ 
+ disp("Posición final sin perturbaciones")
+ disp(M)
+ Mn=M(yi,xi);xn=xi; yn=yi; %valores finales del ciclo sin perturbar los theta 
+ M(yi,xi)=0; %borro el último movimiento
  
  if(h<0)
     h=0.01;
@@ -337,8 +355,14 @@ elseif(q==3)
  tp1=t1; tp2=t2; tp3=t3; tp4=t4;
  t1=t1+h*dw(1); t2=t2+h*dw(2); t3=t3+h*dw(3); t4=t4+h*dw(4);
  xi=xp; yi=yp;
- M(yp,xp)=Mp; %valores pasados 
- 
+ M(yp,xp)=Mp; %valores iniciales 
+ Npaso=0;
+ pe=0;
+  while Npaso<Pmax 
+ Npaso=Npaso+1;
+ s1=0; s2=0;
+ s3=(xi-1)/10; %sensores de posición
+ s4=(yi-1)/10;
   %---------------------------------------------------------------------------------------------------SENTIDO NORTE
  %%% LECTURA DE SENSORES
  if(M(yi,xi)==8) 
@@ -380,8 +404,8 @@ elseif((p2>p1)&&(p2>p3)&&(p2>p4))
             q=4;
 end
 
-  disp("Tablero pasado")
-  disp(M)
+%   disp("Tablero pasado")
+%   disp(M)
   M(yi,xi)=0; %limpio la posicion inicial
   
  %comportamientos 
@@ -392,19 +416,19 @@ end
      if(M(yi-1,xi-1)==0)    
      xi=xi-1; yi=yi-1; %adelante izquierda
      else
-     pe=10; %penalización    
+     pe=pe+1; %penalización    
      end
 elseif(q==2)
      if(M(yi-1,xi+1)==0)    
      xi=xi+1; yi=yi-1; %adelante derecha
      else
-     pe=10; %penalización    
+     pe=pe+1; %penalización    
      end    
 elseif(q==3)
      if(M(yi-1,xi)==0)
      yi=yi-1; %adelante 
      else
-     pe=10; %penalización    
+     pe=pe+1; %penalización    
      end   
      end
      M(yi,xi)=8;
@@ -454,8 +478,8 @@ elseif((p2>p1)&&(p2>p3)&&(p2>p4))
             q=4;
 end
 
-  disp("Tablero pasado")
-  disp(M)
+%   disp("Tablero pasado")
+%   disp(M)
   M(yi,xi)=0; %limpio la posicion inicial
   
  %comportamientos 
@@ -466,19 +490,19 @@ end
      if(M(yi-1,xi+1)==0)     
      xi=xi+1; yi=yi-1; %adelante izquierda
      else
-     pe=10; %penalización    
+     pe=pe+1; %penalización    
      end
 elseif(q==2)
      if(M(yi+1,xi+1)==0)    
     xi=xi+1; yi=yi+1; %adelante derecha
      else
-     pe=10; %penalización    
+     pe=pe+1; %penalización    
      end    
 elseif(q==3)
      if(M(yi,xi+1)==0)     
      xi=xi+1; %adelante 
      else
-     pe=10; %penalización    
+     pe=pe+1; %penalización    
      end       
      end
      M(yi,xi)=6;
@@ -526,8 +550,8 @@ elseif((p2>p1)&&(p2>p3)&&(p2>p4))
             q=4;
 end
 
-  disp("Tablero pasado")
-  disp(M)
+%   disp("Tablero pasado")
+%   disp(M)
   M(yi,xi)=0; %limpio la posicion inicial
   
  %comportamientos 
@@ -538,19 +562,19 @@ end
      if(M(yi+1,xi+1)==0)     
      xi=xi+1; yi=yi+1; %adelante izquierda
      else
-     pe=10; %penalización    
+     pe=pe+1; %penalización    
      end
 elseif(q==2)
      if(M(yi+1,xi-1)==0)     
      xi=xi-1; yi=yi+1; %adelante derecha
      else
-     pe=10; %penalización    
+     pe=pe+1; %penalización    
      end    
 elseif(q==3)
      if(M(yi+1,xi)==0)     
      yi=yi+1; %adelante 
      else
-     pe=10; %penalización    
+     pe=pe+1; %penalización    
      end     
      end
      M(yi,xi)=2;
@@ -598,8 +622,8 @@ elseif((p2>p1)&&(p2>p3)&&(p2>p4))
             q=4;
 end
 
-  disp("Tablero pasado")
-  disp(M)
+%   disp("Tablero pasado")
+%   disp(M)
   M(yi,xi)=0; %limpio la posicion inicial
   
  %comportamientos 
@@ -610,47 +634,53 @@ end
      if(M(yi+1,xi-1)==0)     
      xi=xi-1; yi=yi+1; %adelante izquierda
      else
-     pe=10; %penalización    
+     pe=pe+1; %penalización    
      end
 elseif(q==2)
      if(M(yi-1,xi-1)==0)     
      xi=xi-1; yi=yi-1; %adelante derecha
      else
-     pe=10; %penalización    
+     pe=pe+1; %penalización    
      end    
 elseif(q==3)
      if(M(yi,xi-1)==0)     
      xi=xi-1; %adelante 
      else
-     pe=10; %penalización    
+     pe=pe+1; %penalización    
      end      
      end
      M(yi,xi)=4;
  end
- 
+    if((xi==xf)&&(yi==yf))
+    Npasos=Pmax; %fin del ciclo, llegó al punto deseado
+    end
  end %Fin del if del sentido OESTE del robot
  %FIN DE 1 CICLO COMPLETO DESPUES DE LA PERTURBACION DE LOS THETA
- e2=sqrt((xi-xf)^2+(yi-yf)^2)+pe;
+  end
+
+    if((xi==xf)&&(yi==yf))
+    J2(it)=0;
+    else
+    e2=sqrt((xi-xf)^2+(yi-yf)^2);
+    J2(it)=e2*1.1+pe/10; %se suma la penalización por avanzar hacia un obstaculo (pe) y la penalizacion por distancia (10%)
+    end
  
  %actualización de parametros theta
-
-    if(e2<e1) %exito
-        %yi=yi xi=xi dejo los ultimos (despues de perturbar los theta)
-        %dejo el ultimo movimiento hecho M(y,x)
+ disp("Posición final con perturbaciones")
+ disp(M)
+ M(yi,xi)=0; %borro el ultimo movimiento
+ 
+    if(J2(it)<J1(it)) %exito
+        %dejo los theta t1..t4 con las perturbaciones
         s=s+1;
-        J(Npaso)=e2;
+        J(it)=J2(it);
     else %fracaso
-        t1=tp1;t2=tp2;t3=tp3;t4=tp4;
-        M(yi,xi)=0; %borro el ultimo movimiento
-        xi=xn; yi=yn; 
-        M(yi,xi)=Mn; %dejo el movimiento sin las perturbaciones de los thetas
-        %dw=100*rand(4,1); %nuevos valores aleatoreos para realizar variaciones 
-        dw=-100+(100+100)*rand(4,1);
+        t1=tp1;t2=tp2;t3=tp3;t4=tp4; %dejo los theta sin perturbar
+        dw=-10+(10+10)*rand(4,1); %nuevos valores aleatoreos para realizar variaciones 
         f=f+1;
-        J(Npaso)=e1;
+        J(it)=J1(it);
     end
 
-    
     if(s>2)
         h=h+0.05;
         s=0;
@@ -660,12 +690,6 @@ elseif(q==3)
         h=h-0.05;
         f=0;
     end
-    disp("Tablero actual")
-    disp(M)
-    if((xi==xf)&&(yi==yf))
-    Npasos=Pmax; %fin del programa, llegó al punto deseado
-    J(Npasos)=0;
-    end
     
-    
- end
+end
+
